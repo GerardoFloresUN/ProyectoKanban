@@ -38,6 +38,14 @@
         <input asp-for="Estado" class="form-control" />
     </div>
 
+    <div class="mb-3">
+    <label>Asignar a Usuario</label>
+    <select asp-for="UsuarioId" class="form-control" asp-items="ViewBag.Usuarios">
+        <option value="">-- Selecciona un usuario --</option>
+    </select>
+</div>
+
+
     <button type="submit" class="btn btn-primary">Guardar</button>
     <a asp-action="TareaList" class="btn btn-secondary">Regresar</a>
 </form>

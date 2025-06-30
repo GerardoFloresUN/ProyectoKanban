@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace ProyectoKanban.Entities
 {
@@ -10,5 +13,10 @@ namespace ProyectoKanban.Entities
         public DateTime FechaInicio { get; set; }
         public DateTime FechaEntrega { get; set; }
         public string Estado { get; set; }
+
+        public string? UsuarioId { get; set; }
+
+        [ForeignKey("UsuarioId")]
+        public IdentityUser? Usuario { get; set; }
     }
 }

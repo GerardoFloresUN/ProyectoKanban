@@ -1,39 +1,69 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ProyectoKanban.Entities;
 using ProyectoKanban.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ProyectoKanban.Controllers
 {
     public class TareaController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public TareaController(ApplicationDbContext context)
+        public TareaController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        public IActionResult TareaList()
+        public async Task<IActionResult> TareaList()
+    {
+        var tareas = await _context.Tareas.ToListAsync();
+
+        var lista = new List<TareaModel>();
+
+        foreach (var tarea in tareas)
         {
-            var lista = _context.Tareas.Select(t => new TareaModel
-            {
-                Id = t.Id,
-                Nombre = t.Nombre,
-                Descripcion = t.Descripcion,
-                FechaInicio = t.FechaInicio,
-                FechaEntrega = t.FechaEntrega,
-                Estado = t.Estado
-            }).ToList();
+            string? usuarioEmail = null;
 
-            return View(lista);
+            if (!string.IsNullOrEmpty(tarea.UsuarioId))
+            {
+                var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
+                usuarioEmail = usuario?.Email;
+            }
+
+            lista.Add(new TareaModel
+            {
+                Id = tarea.Id,
+                Nombre = tarea.Nombre,
+                Descripcion = tarea.Descripcion,
+                FechaInicio = tarea.FechaInicio,
+                FechaEntrega = tarea.FechaEntrega,
+                Estado = tarea.Estado,
+                UsuarioId = tarea.UsuarioId,
+                UsuarioNombre = usuarioEmail
+            });
         }
 
-        public IActionResult TareaAdd() => View();
+        return View(lista);
+    }
+
+        public async Task<IActionResult> TareaAdd()
+        {
+            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
+            return View();
+        }
 
         [HttpPost]
-        public IActionResult TareaAdd(TareaModel model)
+        public async Task<IActionResult> TareaAdd(TareaModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
+                return View(model);
+            }
 
             var tarea = new Tarea
             {
@@ -42,19 +72,19 @@ namespace ProyectoKanban.Controllers
                 Descripcion = model.Descripcion,
                 FechaInicio = model.FechaInicio,
                 FechaEntrega = model.FechaEntrega,
-                Estado = model.Estado
+                Estado = model.Estado,
+                UsuarioId = model.UsuarioId
             };
 
             _context.Tareas.Add(tarea);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("TareaList");
         }
 
-        [HttpGet]
-        public IActionResult TareaEdit(Guid id)
+        public async Task<IActionResult> TareaEdit(Guid id)
         {
-            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == id);
+            var tarea = await _context.Tareas.FindAsync(id);
             if (tarea == null) return RedirectToAction("TareaList");
 
             var model = new TareaModel
@@ -64,18 +94,24 @@ namespace ProyectoKanban.Controllers
                 Descripcion = tarea.Descripcion,
                 FechaInicio = tarea.FechaInicio,
                 FechaEntrega = tarea.FechaEntrega,
-                Estado = tarea.Estado
+                Estado = tarea.Estado,
+                UsuarioId = tarea.UsuarioId
             };
 
+            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email", model.UsuarioId);
             return View(model);
         }
 
         [HttpPost]
-        public IActionResult TareaEdit(TareaModel model)
+        public async Task<IActionResult> TareaEdit(TareaModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email", model.UsuarioId);
+                return View(model);
+            }
 
-            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == model.Id);
+            var tarea = await _context.Tareas.FindAsync(model.Id);
             if (tarea == null) return RedirectToAction("TareaList");
 
             tarea.Nombre = model.Nombre;
@@ -83,39 +119,10 @@ namespace ProyectoKanban.Controllers
             tarea.FechaInicio = model.FechaInicio;
             tarea.FechaEntrega = model.FechaEntrega;
             tarea.Estado = model.Estado;
+            tarea.UsuarioId = model.UsuarioId;
 
-            _context.Tareas.Update(tarea);
-            _context.SaveChanges();
-
-            return RedirectToAction("TareaList");
-        }
-
-        public IActionResult TareaDeleted(Guid id)
-        {
-            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == id);
-            if (tarea == null) return RedirectToAction("TareaList");
-
-            var model = new TareaModel
-            {
-                Id = tarea.Id,
-                Nombre = tarea.Nombre,
-                Descripcion = tarea.Descripcion,
-                FechaInicio = tarea.FechaInicio,
-                FechaEntrega = tarea.FechaEntrega,
-                Estado = tarea.Estado
-            };
-
-            return View(model);
-        }
-
-        [HttpPost]
-        public IActionResult TareaDeleted(TareaModel model)
-        {
-            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == model.Id);
-            if (tarea == null) return RedirectToAction("TareaList");
-
-            _context.Tareas.Remove(tarea);
-            _context.SaveChanges();
+            _context.Update(tarea);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("TareaList");
         }

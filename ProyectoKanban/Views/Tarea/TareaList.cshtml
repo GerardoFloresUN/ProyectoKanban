@@ -1,4 +1,4 @@
-@model List<TareaModel>
+@model List<ProyectoKanban.Models.TareaModel>
 
 @{
     ViewData["Title"] = "Lista de Tareas";
@@ -17,6 +17,7 @@
                 <th>Fecha Inicio</th>
                 <th>Fecha Entrega</th>
                 <th>Estado</th>
+                <th>Asignado a</th> <!-- NUEVA COLUMNA -->
             </tr>
         </thead>
         <tbody>
@@ -32,6 +33,7 @@
                     <td>@tarea.FechaInicio.ToShortDateString()</td>
                     <td>@tarea.FechaEntrega.ToShortDateString()</td>
                     <td>@tarea.Estado</td>
+                    <td>@(tarea.UsuarioNombre ?? "Sin asignar")</td> <!-- NUEVO CAMPO -->
                 </tr>
             }
         </tbody>

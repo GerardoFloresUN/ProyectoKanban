@@ -12,8 +12,8 @@ using ProyectoKanban;
 namespace ProyectoKanban.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250630101546_IdentitySetup")]
-    partial class IdentitySetup
+    [Migration("20250630200727_AddUsuarioToTarea")]
+    partial class AddUsuarioToTarea
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -251,7 +251,12 @@ namespace ProyectoKanban.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UsuarioId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Tareas");
                 });
@@ -305,6 +310,15 @@ namespace ProyectoKanban.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ProyectoKanban.Entities.Tarea", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId");
+
+                    b.Navigation("Usuario");
                 });
 #pragma warning restore 612, 618
         }

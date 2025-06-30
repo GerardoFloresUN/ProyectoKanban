@@ -10,5 +10,9 @@ namespace ProyectoKanban.Models
         public DateTime FechaInicio { get; set; }
         public DateTime FechaEntrega { get; set; }
         public string Estado { get; set; }
+
+        public string? UsuarioId { get; set; }
+
+        public string? UsuarioNombre { get; set; }
     }
 }
