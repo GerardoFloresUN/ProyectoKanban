@@ -1,0 +1,39 @@
+@model List<TareaModel>
+
+@{
+    ViewData["Title"] = "Lista de Tareas";
+}
+
+<div class="p-4 shadow-sm bg-white rounded">
+    <h1>@ViewData["Title"]</h1>
+    <a asp-action="TareaAdd" class="btn btn-primary mb-3">Agregar Tarea</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Acciones</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Entrega</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tarea in Model)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-secondary btn-sm">Editar</a>
+                        <a asp-action="TareaDeleted" asp-route-id="@tarea.Id" class="btn btn-danger btn-sm">Eliminar</a>
+                    </td>
+                    <td>@tarea.Nombre</td>
+                    <td>@tarea.Descripcion</td>
+                    <td>@tarea.FechaInicio.ToShortDateString()</td>
+                    <td>@tarea.FechaEntrega.ToShortDateString()</td>
+                    <td>@tarea.Estado</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,126 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProyectoKanban.Models;
+using ProyectoKanban.Services;
+
+namespace ProyectoKanban.Controllers
+{
+    public class UsuarioController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> userManager;
+        private readonly SignInManager<IdentityUser> signInManager;
+
+        public UsuarioController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ApplicationDbContext context)
+        {
+            this.userManager = userManager;
+            this.signInManager = signInManager;
+            this._context = context;
+        }
+
+        [AllowAnonymous]
+        public IActionResult Registro()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Registro(RegistroViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var usuario = new IdentityUser() { Email = model.Email, UserName = model.Email };
+            var resultado = await userManager.CreateAsync(usuario, model.Password);
+
+            if (resultado.Succeeded)
+            {
+                await signInManager.SignInAsync(usuario, isPersistent: true);
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        public IActionResult Login(string mensaje = null)
+        {
+            if (mensaje != null)
+            {
+                ViewData["mensaje"] = mensaje;
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var resultado = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.Recuerdame, lockoutOnFailure: false);
+
+            if (resultado.Succeeded)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError(string.Empty, "Nombre de usuario o password incorrecto");
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return RedirectToAction("Login", "Usuario");
+        }
+
+        public IActionResult Listado(string confirmed = null, string remove = null)
+        {
+            var lista = _context.Users.Select(x => new UsuarioViewModel
+            {
+                Email = x.Email
+            }).ToList();
+
+            var model = new UsuariosListadoViewModel
+            {
+                Usuarios = lista,
+                Mensaje = !string.IsNullOrEmpty(confirmed) ? confirmed : remove
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> HacerAdmin(string email)
+        {
+            var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return NotFound();
+
+            await userManager.AddToRoleAsync(usuario, MyConstants.RolAdmin);
+            return RedirectToAction("Listado", new { confirmed = $"Rol asignado correctamente a {email}" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoverAdmin(string email)
+        {
+            var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return NotFound();
+
+            await userManager.RemoveFromRoleAsync(usuario, MyConstants.RolAdmin);
+            return RedirectToAction("Listado", new { remove = $"Rol removido correctamente a {email}" });
+        }
+    }
+}

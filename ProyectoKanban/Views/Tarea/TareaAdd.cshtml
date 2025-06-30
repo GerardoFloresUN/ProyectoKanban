@@ -1,0 +1,40 @@
+@using ProyectoKanban.Models
+@model TareaModel
+
+@{
+    ViewData["Title"] = "Agregar Tarea";
+}
+
+<form asp-action="TareaAdd" method="post" class="p-4 shadow-sm bg-white rounded">
+    <h3 class="mb-4">@ViewData["Title"]</h3>
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label>Nombre</label>
+        <input asp-for="Nombre" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Descripción</label>
+        <input asp-for="Descripcion" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Fecha de Inicio</label>
+        <input asp-for="FechaInicio" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Fecha de Entrega</label>
+        <input asp-for="FechaEntrega" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Estado</label>
+        <input asp-for="Estado" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="TareaList" class="btn btn-secondary">Regresar</a>
+</form>

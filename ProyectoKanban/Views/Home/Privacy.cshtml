@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>@ViewData["Title"]</h1>
+
+<!-- Tablero Kanban -->
+<style>
+.kanban-board {
+    display: flex;
+    gap: 20px;
+    margin-top: 40px;
+    justify-content: center;
+}
+.kanban-column {
+    background: #f4f4f4;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    width: 300px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 350px;
+}
+.kanban-column h2 {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+}
+.kanban-card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    padding: 12px 10px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+</style>
+
+<!-- Formulario para agregar tareas -->
+<div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:10px; gap:10px;">
+    <input type="text" id="nuevaTarea" placeholder="Nueva tarea" style="padding:6px; width:200px; border-radius:4px; border:1px solid #ccc;">
+    <select id="columnaTarea" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
+        <option value="0">Por hacer</option>
+        <option value="1">En progreso</option>
+        <option value="2">Hecho</option>
+    </select>
+    <button onclick="crearTarea()" style="padding:6px 16px; border-radius:4px; background:#007bff; color:#fff; border:none; cursor:pointer;">Crear</button>
+</div>
+
+<div class="kanban-board">
+    <div class="kanban-column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Por hacer</h2>
+        <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="card1">Tarea 1</div>
+        <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="card2">Tarea 2</div>
+    </div>
+    <div class="kanban-column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>En progreso</h2>
+        <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="card3">Tarea 3</div>
+    </div>
+    <div class="kanban-column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Hecho</h2>
+        <div class="kanban-card" draggable="true" ondragstart="drag(event)" id="card4">Tarea 4</div>
+    </div>
+</div>
+
+<script>
+let cardCounter = 5;
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    var card = document.getElementById(data);
+    if (ev.target.classList.contains('kanban-column')) {
+        ev.target.appendChild(card);
+    } else if (ev.target.classList.contains('kanban-card')) {
+        ev.target.parentNode.insertBefore(card, ev.target.nextSibling);
+    }
+}
+function crearTarea() {
+    var texto = document.getElementById('nuevaTarea').value.trim();
+    var columna = document.getElementById('columnaTarea').value;
+    if (!texto) {
+        alert('Escribe una tarea.');
+        return;
+    }
+    var nuevaCard = crearCard(texto);
+    document.getElementsByClassName('kanban-column')[columna].appendChild(nuevaCard);
+    document.getElementById('nuevaTarea').value = '';
+}
+
+function crearCard(texto, id) {
+    var card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.draggable = true;
+    card.ondragstart = drag;
+    card.id = id || ('card' + cardCounter++);
+
+    var span = document.createElement('span');
+    span.textContent = texto;
+    card.appendChild(span);
+
+    var btnEditar = document.createElement('button');
+    btnEditar.textContent = '✏️';
+    btnEditar.title = 'Editar';
+    btnEditar.style = 'margin-left:8px; border:none; background:none; cursor:pointer; font-size:1rem;';
+    btnEditar.onclick = function() { editarCard(card, span); };
+    card.appendChild(btnEditar);
+
+    var btnBorrar = document.createElement('button');
+    btnBorrar.textContent = '🗑️';
+    btnBorrar.title = 'Borrar';
+    btnBorrar.style = 'margin-left:4px; border:none; background:none; cursor:pointer; font-size:1rem;';
+    btnBorrar.onclick = function() { card.remove(); };
+    card.appendChild(btnBorrar);
+
+    return card;
+}
+
+function editarCard(card, span) {
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = span.textContent;
+    input.style = 'width:70%; margin-right:6px;';
+    input.onkeydown = function(e) {
+        if (e.key === 'Enter') guardarEdicion();
+    };
+    card.replaceChild(input, span);
+    input.focus();
+
+    function guardarEdicion() {
+        if (input.value.trim() !== '') {
+            span.textContent = input.value.trim();
+            card.replaceChild(span, input);
+        }
+    }
+    input.onblur = guardarEdicion;
+}
+
+// Actualizar tarjetas iniciales para incluir botones
+window.addEventListener('DOMContentLoaded', function() {
+    var cards = document.querySelectorAll('.kanban-card');
+    cards.forEach(function(card) {
+        if (!card.querySelector('button')) {
+            var texto = card.textContent;
+            card.textContent = '';
+            var nueva = crearCard(texto, card.id);
+            card.replaceWith(nueva);
+        }
+    });
+});
+</script>
+
+<p>Use this page to detail your site's privacy policy.</p>
