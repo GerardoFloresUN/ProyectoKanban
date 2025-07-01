@@ -19,36 +19,34 @@ namespace ProyectoKanban.Controllers
         }
 
         public async Task<IActionResult> TareaList()
-    {
-        var tareas = await _context.Tareas.ToListAsync();
-
-        var lista = new List<TareaModel>();
-
-        foreach (var tarea in tareas)
         {
-            string? usuarioEmail = null;
+            var tareas = await _context.Tareas.ToListAsync();
+            var lista = new List<TareaModel>();
 
-            if (!string.IsNullOrEmpty(tarea.UsuarioId))
+            foreach (var tarea in tareas)
             {
-                var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
-                usuarioEmail = usuario?.Email;
+                string? usuarioEmail = null;
+                if (!string.IsNullOrEmpty(tarea.UsuarioId))
+                {
+                    var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
+                    usuarioEmail = usuario?.Email;
+                }
+
+                lista.Add(new TareaModel
+                {
+                    Id = tarea.Id,
+                    Nombre = tarea.Nombre,
+                    Descripcion = tarea.Descripcion,
+                    FechaInicio = tarea.FechaInicio,
+                    FechaEntrega = tarea.FechaEntrega,
+                    Estado = tarea.Estado,
+                    UsuarioId = tarea.UsuarioId,
+                    UsuarioNombre = usuarioEmail
+                });
             }
 
-            lista.Add(new TareaModel
-            {
-                Id = tarea.Id,
-                Nombre = tarea.Nombre,
-                Descripcion = tarea.Descripcion,
-                FechaInicio = tarea.FechaInicio,
-                FechaEntrega = tarea.FechaEntrega,
-                Estado = tarea.Estado,
-                UsuarioId = tarea.UsuarioId,
-                UsuarioNombre = usuarioEmail
-            });
+            return View(lista);
         }
-
-        return View(lista);
-    }
 
         public async Task<IActionResult> TareaAdd()
         {
@@ -125,6 +123,82 @@ namespace ProyectoKanban.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("TareaList");
+        }
+
+            public IActionResult TareaDeleted(Guid id)
+        {
+            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == id);
+            if (tarea == null) return RedirectToAction("TareaList");
+
+            var model = new TareaModel
+            {
+                Id = tarea.Id,
+                Nombre = tarea.Nombre,
+                Descripcion = tarea.Descripcion,
+                FechaInicio = tarea.FechaInicio,
+                FechaEntrega = tarea.FechaEntrega,
+                Estado = tarea.Estado
+            };
+
+            return View(model);
+        }
+
+            [HttpPost]
+        public IActionResult TareaDeleted(TareaModel model)
+        {
+            var tarea = _context.Tareas.FirstOrDefault(t => t.Id == model.Id);
+            if (tarea == null) return RedirectToAction("TareaList");
+
+            _context.Tareas.Remove(tarea);
+            _context.SaveChanges();
+
+            return RedirectToAction("TareaList");
+        }
+
+
+        // 🟦 Acción del tablero Kanban
+        public async Task<IActionResult> Kanban()
+        {
+            var tareas = await _context.Tareas.ToListAsync();
+
+            var lista = new List<TareaModel>();
+            foreach (var tarea in tareas)
+            {
+                string? usuarioEmail = null;
+                if (!string.IsNullOrEmpty(tarea.UsuarioId))
+                {
+                    var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
+                    usuarioEmail = usuario?.Email;
+                }
+
+                lista.Add(new TareaModel
+                {
+                    Id = tarea.Id,
+                    Nombre = tarea.Nombre,
+                    Estado = tarea.Estado,
+                    UsuarioNombre = usuarioEmail
+                });
+            }
+
+            return View(lista);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActualizarEstadoTarea([FromBody] EstadoTareaModel model)
+        {
+            var tarea = await _context.Tareas.FindAsync(Guid.Parse(model.Id));
+            if (tarea == null) return NotFound();
+
+            tarea.Estado = model.Estado;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        public class EstadoTareaModel
+        {
+            public string Id { get; set; }
+            public string Estado { get; set; }
         }
     }
 }

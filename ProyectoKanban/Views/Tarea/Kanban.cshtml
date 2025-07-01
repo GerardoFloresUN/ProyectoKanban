@@ -1,0 +1,162 @@
+@model List<ProyectoKanban.Models.TareaModel>
+@{
+    ViewData["Title"] = "Tablero Kanban";
+}
+
+<style>
+.kanban-board {
+    display: flex;
+    gap: 20px;
+    margin-top: 40px;
+    justify-content: center;
+}
+.kanban-column {
+    background: #f4f4f4;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    width: 300px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 350px;
+}
+.kanban-column h2 {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+}
+.kanban-card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    padding: 12px 10px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    cursor: grab;
+}
+.kanban-card:active {
+    cursor: grabbing;
+}
+</style>
+
+<div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:10px; gap:10px;">
+    <select id="selectTarea" style="padding:6px; width:250px; border-radius:4px; border:1px solid #ccc;">
+        <option value="">-- Selecciona una tarea --</option>
+        @foreach (var tarea in Model)
+        {
+            <option value="@tarea.Id">@tarea.Nombre</option>
+        }
+    </select>
+    <select id="columnaTarea" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
+        <option value="Por hacer">Por hacer</option>
+        <option value="En progreso">En progreso</option>
+        <option value="Hecho">Hecho</option>
+    </select>
+    <button type="button" onclick="agregarTarea()" class="btn btn-primary">Agregar</button>
+</div>
+
+<div class="kanban-board">
+    <div class="kanban-column" data-estado="Por hacer" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Por hacer</h2>
+    </div>
+    <div class="kanban-column" data-estado="En progreso" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>En progreso</h2>
+    </div>
+    <div class="kanban-column" data-estado="Hecho" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Hecho</h2>
+    </div>
+</div>
+
+<script>
+    const tareas = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+    let cardMap = {};
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const card = document.getElementById(data);
+        let target = ev.target.closest('.kanban-column');
+        if (target && card) {
+            target.appendChild(card);
+            const estadoNuevo = target.getAttribute("data-estado");
+            const tareaId = data.replace("card-", "");
+            actualizarEstado(tareaId, estadoNuevo);
+        }
+    }
+
+    function agregarTarea() {
+        const id = document.getElementById('selectTarea').value;
+        const columna = document.getElementById('columnaTarea').value;
+
+        if (!id) {
+            alert("Selecciona una tarea");
+            return;
+        }
+
+        if (cardMap[id]) {
+            alert("La tarea ya está en el tablero");
+            return;
+        }
+
+        // Cambié t.id a t.Id para que coincida con el JSON serializado
+        const tarea = tareas.find(t => t.Id === id);
+        if (!tarea) {
+            alert("Tarea no encontrada");
+            return;
+        }
+
+        const card = crearCard(tarea, id);
+        const columnaElement = document.querySelector(`.kanban-column[data-estado="${columna}"]`);
+        if (!columnaElement) {
+            alert("Columna inválida");
+            return;
+        }
+        columnaElement.appendChild(card);
+        cardMap[id] = card;
+
+        actualizarEstado(id, columna);
+    }
+
+    function crearCard(tarea, id) {
+        const card = document.createElement('div');
+        card.className = 'kanban-card';
+        card.draggable = true;
+        card.id = 'card-' + id;
+        card.ondragstart = drag;
+        // Cambié tarea.nombre a tarea.Nombre y tarea.usuarioNombre a tarea.UsuarioNombre
+        card.innerHTML = `<strong>${tarea.Nombre}</strong><br><small>${tarea.UsuarioNombre || "Sin asignar"}</small>`;
+        return card;
+    }
+
+    function actualizarEstado(id, nuevoEstado) {
+        fetch('/Tarea/ActualizarEstadoTarea', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, estado: nuevoEstado })
+        }).catch(err => console.error('Error actualizando estado:', err));
+    }
+
+    // Cargar tarjetas ya existentes al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+        tareas.forEach(tarea => {
+            if (!tarea.Estado) return;
+
+            if (cardMap[tarea.Id]) return; // Evitar duplicados
+
+            const card = crearCard(tarea, tarea.Id);
+            const columna = document.querySelector(`.kanban-column[data-estado="${tarea.Estado}"]`);
+            if (columna) {
+                columna.appendChild(card);
+                cardMap[tarea.Id] = card;
+            }
+        });
+    });
+</script>
