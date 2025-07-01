@@ -12,8 +12,8 @@ using ProyectoKanban;
 namespace ProyectoKanban.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250630200727_AddUsuarioToTarea")]
-    partial class AddUsuarioToTarea
+    [Migration("20250701004627_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -250,6 +250,9 @@ namespace ProyectoKanban.Migrations
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
 
                     b.Property<string>("UsuarioId")
                         .HasColumnType("nvarchar(450)");

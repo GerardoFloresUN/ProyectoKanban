@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProyectoKanban.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUsuarioToTarea : Migration
+    public partial class TableroGuardar : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -166,7 +166,8 @@ namespace ProyectoKanban.Migrations
                     FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FechaEntrega = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Estado = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Orden = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

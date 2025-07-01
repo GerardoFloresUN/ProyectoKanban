@@ -159,7 +159,10 @@ namespace ProyectoKanban.Controllers
         // 🟦 Acción del tablero Kanban
         public async Task<IActionResult> Kanban()
         {
-            var tareas = await _context.Tareas.ToListAsync();
+            var tareas = await _context.Tareas
+                .OrderBy(t => t.Estado)
+                .ThenBy(t => t.Orden)
+                .ToListAsync();
 
             var lista = new List<TareaModel>();
             foreach (var tarea in tareas)
@@ -176,7 +179,8 @@ namespace ProyectoKanban.Controllers
                     Id = tarea.Id,
                     Nombre = tarea.Nombre,
                     Estado = tarea.Estado,
-                    UsuarioNombre = usuarioEmail
+                    UsuarioNombre = usuarioEmail,
+                    Orden = tarea.Orden
                 });
             }
 
@@ -184,21 +188,25 @@ namespace ProyectoKanban.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ActualizarEstadoTarea([FromBody] EstadoTareaModel model)
-        {
-            var tarea = await _context.Tareas.FindAsync(Guid.Parse(model.Id));
-            if (tarea == null) return NotFound();
+public async Task<IActionResult> ActualizarEstadoTarea([FromBody] EstadoTareaModel model)
+{
+    if (!Guid.TryParse(model.Id, out var tareaId)) return BadRequest();
 
-            tarea.Estado = model.Estado;
-            await _context.SaveChangesAsync();
+    var tarea = await _context.Tareas.FindAsync(tareaId);
+    if (tarea == null) return NotFound();
 
-            return Ok();
-        }
+    tarea.Estado = model.Estado;
+    tarea.Orden = model.Orden;
 
-        public class EstadoTareaModel
-        {
-            public string Id { get; set; }
-            public string Estado { get; set; }
-        }
+    await _context.SaveChangesAsync();
+    return Ok();
+}
+
+public class EstadoTareaModel
+{
+    public string Id { get; set; }
+    public string Estado { get; set; }
+    public int Orden { get; set; }
+}
     }
 }

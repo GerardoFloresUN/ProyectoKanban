@@ -14,5 +14,7 @@ namespace ProyectoKanban.Models
         public string? UsuarioId { get; set; }
 
         public string? UsuarioNombre { get; set; }
+
+        public int Orden { get; set; }
     }
 }

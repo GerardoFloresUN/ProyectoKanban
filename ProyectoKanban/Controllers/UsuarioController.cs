@@ -42,7 +42,7 @@ namespace ProyectoKanban.Controllers
             if (resultado.Succeeded)
             {
                 await signInManager.SignInAsync(usuario, isPersistent: true);
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Kanban", "Tarea");
             }
 
             foreach (var error in resultado.Errors)
@@ -73,7 +73,7 @@ namespace ProyectoKanban.Controllers
 
             if (resultado.Succeeded)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Kanban", "Tarea");
             }
 
             ModelState.AddModelError(string.Empty, "Nombre de usuario o password incorrecto");

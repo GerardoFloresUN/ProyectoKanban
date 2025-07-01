@@ -18,5 +18,7 @@ namespace ProyectoKanban.Entities
 
         [ForeignKey("UsuarioId")]
         public IdentityUser? Usuario { get; set; }
+
+        public int Orden { get; set; }
     }
 }

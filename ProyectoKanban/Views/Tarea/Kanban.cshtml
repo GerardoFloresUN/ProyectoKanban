@@ -37,6 +37,7 @@
 .kanban-card:active {
     cursor: grabbing;
 }
+
 </style>
 
 <div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:10px; gap:10px;">
@@ -83,12 +84,19 @@
         ev.preventDefault();
         const data = ev.dataTransfer.getData("text");
         const card = document.getElementById(data);
-        let target = ev.target.closest('.kanban-column');
+        const target = ev.target.closest('.kanban-column');
+
         if (target && card) {
             target.appendChild(card);
+
             const estadoNuevo = target.getAttribute("data-estado");
             const tareaId = data.replace("card-", "");
-            actualizarEstado(tareaId, estadoNuevo);
+
+            // Calcular nuevo orden: índice de la tarjeta dentro de la columna (0-based)
+            const cards = Array.from(target.querySelectorAll('.kanban-card'));
+            const nuevoOrden = cards.findIndex(c => c.id === data);
+
+            actualizarEstado(tareaId, estadoNuevo, nuevoOrden);
         }
     }
 
@@ -106,7 +114,6 @@
             return;
         }
 
-        // Cambié t.id a t.Id para que coincida con el JSON serializado
         const tarea = tareas.find(t => t.Id === id);
         if (!tarea) {
             alert("Tarea no encontrada");
@@ -122,7 +129,11 @@
         columnaElement.appendChild(card);
         cardMap[id] = card;
 
-        actualizarEstado(id, columna);
+        // Orden al agregar es el final de la columna
+        const cards = Array.from(columnaElement.querySelectorAll('.kanban-card'));
+        const orden = cards.length - 1;
+
+        actualizarEstado(id, columna, orden);
     }
 
     function crearCard(tarea, id) {
@@ -131,16 +142,15 @@
         card.draggable = true;
         card.id = 'card-' + id;
         card.ondragstart = drag;
-        // Cambié tarea.nombre a tarea.Nombre y tarea.usuarioNombre a tarea.UsuarioNombre
         card.innerHTML = `<strong>${tarea.Nombre}</strong><br><small>${tarea.UsuarioNombre || "Sin asignar"}</small>`;
         return card;
     }
 
-    function actualizarEstado(id, nuevoEstado) {
+    function actualizarEstado(id, nuevoEstado, orden) {
         fetch('/Tarea/ActualizarEstadoTarea', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, estado: nuevoEstado })
+            body: JSON.stringify({ id, estado: nuevoEstado, orden: orden })
         }).catch(err => console.error('Error actualizando estado:', err));
     }
 
