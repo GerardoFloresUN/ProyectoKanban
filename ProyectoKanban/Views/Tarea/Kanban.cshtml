@@ -3,6 +3,27 @@
     ViewData["Title"] = "Tablero Kanban";
 }
 
+@if (ViewBag.Alertas != null && ((List<ProyectoKanban.Entities.Tarea>)ViewBag.Alertas).Any())
+{
+    <div class="alert alert-warning mt-3 mx-auto" style="max-width: 900px;">
+        <h5><strong>⚠️ Tareas próximas a vencer</strong></h5>
+        <ul>
+            @foreach (var tarea in (List<ProyectoKanban.Entities.Tarea>)ViewBag.Alertas)
+            {
+                <li>
+                    <b>@tarea.Nombre</b> vence el @tarea.FechaEntrega.ToShortDateString()
+
+                    <form method="post" asp-action="MarcarAlertaVista" asp-controller="Tarea" style="display:inline;">
+                        <input type="hidden" name="id" value="@tarea.Id" />
+                        <button class="btn btn-sm btn-outline-success ms-2" type="submit">Marcar como vista</button>
+                    </form>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+
 <style>
 .kanban-board {
     display: flex;
@@ -136,15 +157,22 @@
         actualizarEstado(id, columna, orden);
     }
 
-    function crearCard(tarea, id) {
-        const card = document.createElement('div');
+        function crearCard(tarea, id) {
+         const card = document.createElement('div');
         card.className = 'kanban-card';
         card.draggable = true;
         card.id = 'card-' + id;
         card.ondragstart = drag;
-        card.innerHTML = `<strong>${tarea.Nombre}</strong><br><small>${tarea.UsuarioNombre || "Sin asignar"}</small>`;
+
+        card.innerHTML = `
+        <strong>${tarea.Nombre}</strong><br>
+        <small>${tarea.UsuarioNombre || "Sin asignar"}</small><br>
+        <a href="/Tarea/ConfigurarAlerta/${tarea.Id}" class="btn btn-sm btn-outline-warning mt-2">⏰ Configurar alerta</a>
+        `;
+
         return card;
-    }
+}
+
 
     function actualizarEstado(id, nuevoEstado, orden) {
         fetch('/Tarea/ActualizarEstadoTarea', {

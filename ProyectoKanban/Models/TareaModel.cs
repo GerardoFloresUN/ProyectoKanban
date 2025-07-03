@@ -16,5 +16,9 @@ namespace ProyectoKanban.Models
         public string? UsuarioNombre { get; set; }
 
         public int Orden { get; set; }
+
+        public int DiasAntesAlerta { get; set; }
+
+        public bool AlertaEnviada { get; set; }
     }
 }

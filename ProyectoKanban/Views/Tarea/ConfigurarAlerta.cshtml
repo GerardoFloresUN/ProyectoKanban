@@ -1,0 +1,22 @@
+@model ProyectoKanban.Entities.Tarea
+
+@{
+    ViewData["Title"] = "Configurar Alerta";
+}
+
+<h2>Configurar alerta para: @Model.Nombre</h2>
+
+<form method="post" asp-action="ConfigurarAlerta" asp-controller="Tarea">
+    <input type="hidden" name="id" value="@Model.Id" />
+
+    <div class="form-group">
+        <label for="DiasAntesAlerta">¿Cuántos días antes del vencimiento quieres recibir una alerta?</label>
+        <input type="number" class="form-control" id="DiasAntesAlerta" name="DiasAntesAlerta" value="@Model.DiasAntesAlerta" min="0" required />
+        <small class="form-text text-muted">Ejemplo: si pones 3, se enviará una alerta 3 días antes de @Model.FechaEntrega.ToShortDateString().</small>
+    </div>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Guardar alerta</button>
+    <a asp-action="Kanban" class="btn btn-secondary">Cancelar</a>
+</form>

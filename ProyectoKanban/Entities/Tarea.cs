@@ -20,5 +20,9 @@ namespace ProyectoKanban.Entities
         public IdentityUser? Usuario { get; set; }
 
         public int Orden { get; set; }
+
+        public int DiasAntesAlerta { get; set; } = 0;
+
+        public bool AlertaEnviada { get; set; } = false;
     }
 }
