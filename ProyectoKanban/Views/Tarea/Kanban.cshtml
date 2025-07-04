@@ -13,16 +13,18 @@
                 <li>
                     <b>@tarea.Nombre</b> vence el @tarea.FechaEntrega.ToShortDateString()
 
-                    <form method="post" asp-action="MarcarAlertaVista" asp-controller="Tarea" style="display:inline;">
-                        <input type="hidden" name="id" value="@tarea.Id" />
-                        <button class="btn btn-sm btn-outline-success ms-2" type="submit">Marcar como vista</button>
-                    </form>
+                    @if (User.IsInRole("admin"))
+                    {
+                        <form method="post" asp-action="MarcarAlertaVista" asp-controller="Tarea" style="display:inline;">
+                            <input type="hidden" name="id" value="@tarea.Id" />
+                            <button class="btn btn-sm btn-outline-success ms-2" type="submit">Marcar como vista</button>
+                        </form>
+                    }
                 </li>
             }
         </ul>
     </div>
 }
-
 
 <style>
 .kanban-board {
@@ -53,38 +55,40 @@
     padding: 12px 10px;
     margin-bottom: 12px;
     font-size: 1rem;
-    cursor: grab;
+    @if (!User.IsInRole("admin")) { <text>cursor: default;</text> } else { <text>cursor: grab;</text> }
 }
 .kanban-card:active {
-    cursor: grabbing;
+    @if (User.IsInRole("admin")) { <text>cursor: grabbing;</text> }
 }
-
 </style>
 
-<div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:10px; gap:10px;">
-    <select id="selectTarea" style="padding:6px; width:250px; border-radius:4px; border:1px solid #ccc;">
-        <option value="">-- Selecciona una tarea --</option>
-        @foreach (var tarea in Model)
-        {
-            <option value="@tarea.Id">@tarea.Nombre</option>
-        }
-    </select>
-    <select id="columnaTarea" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
-        <option value="Por hacer">Por hacer</option>
-        <option value="En progreso">En progreso</option>
-        <option value="Hecho">Hecho</option>
-    </select>
-    <button type="button" onclick="agregarTarea()" class="btn btn-primary">Agregar</button>
-</div>
+@if (User.IsInRole("admin"))
+{
+    <div style="display:flex; justify-content:center; margin-top:20px; margin-bottom:10px; gap:10px;">
+        <select id="selectTarea" style="padding:6px; width:250px; border-radius:4px; border:1px solid #ccc;">
+            <option value="">-- Selecciona una tarea --</option>
+            @foreach (var tarea in Model)
+            {
+                <option value="@tarea.Id">@tarea.Nombre</option>
+            }
+        </select>
+        <select id="columnaTarea" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
+            <option value="Por hacer">Por hacer</option>
+            <option value="En progreso">En progreso</option>
+            <option value="Hecho">Hecho</option>
+        </select>
+        <button type="button" onclick="agregarTarea()" class="btn btn-primary">Agregar</button>
+    </div>
+}
 
 <div class="kanban-board">
-    <div class="kanban-column" data-estado="Por hacer" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div class="kanban-column" data-estado="Por hacer">
         <h2>Por hacer</h2>
     </div>
-    <div class="kanban-column" data-estado="En progreso" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div class="kanban-column" data-estado="En progreso">
         <h2>En progreso</h2>
     </div>
-    <div class="kanban-column" data-estado="Hecho" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div class="kanban-column" data-estado="Hecho">
         <h2>Hecho</h2>
     </div>
 </div>
@@ -113,7 +117,6 @@
             const estadoNuevo = target.getAttribute("data-estado");
             const tareaId = data.replace("card-", "");
 
-            // Calcular nuevo orden: índice de la tarjeta dentro de la columna (0-based)
             const cards = Array.from(target.querySelectorAll('.kanban-card'));
             const nuevoOrden = cards.findIndex(c => c.id === data);
 
@@ -147,32 +150,43 @@
             alert("Columna inválida");
             return;
         }
+
         columnaElement.appendChild(card);
         cardMap[id] = card;
 
-        // Orden al agregar es el final de la columna
         const cards = Array.from(columnaElement.querySelectorAll('.kanban-card'));
         const orden = cards.length - 1;
 
         actualizarEstado(id, columna, orden);
     }
 
-        function crearCard(tarea, id) {
-         const card = document.createElement('div');
+    function crearCard(tarea, id) {
+        const card = document.createElement('div');
         card.className = 'kanban-card';
-        card.draggable = true;
         card.id = 'card-' + id;
-        card.ondragstart = drag;
+
+        @if (User.IsInRole("admin"))
+        {
+            <text>
+            card.draggable = true;
+            card.ondragstart = drag;
+            </text>
+        }
 
         card.innerHTML = `
-        <strong>${tarea.Nombre}</strong><br>
-        <small>${tarea.UsuarioNombre || "Sin asignar"}</small><br>
-        <a href="/Tarea/ConfigurarAlerta/${tarea.Id}" class="btn btn-sm btn-outline-warning mt-2">⏰ Configurar alerta</a>
+            <strong>${tarea.Nombre}</strong><br>
+            <small>${tarea.UsuarioNombre || "Sin asignar"}</small><br>
+            ${UserIsAdmin(tarea.Id)}
         `;
 
         return card;
-}
+    }
 
+    function UserIsAdmin(id) {
+        return `@User.IsInRole("admin")`.toLowerCase() === "true"
+            ? `<a href="/Tarea/ConfigurarAlerta/${id}" class="btn btn-sm btn-outline-warning mt-2">⏰ Configurar alerta</a>`
+            : "";
+    }
 
     function actualizarEstado(id, nuevoEstado, orden) {
         fetch('/Tarea/ActualizarEstadoTarea', {
@@ -182,12 +196,11 @@
         }).catch(err => console.error('Error actualizando estado:', err));
     }
 
-    // Cargar tarjetas ya existentes al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
         tareas.forEach(tarea => {
             if (!tarea.Estado) return;
 
-            if (cardMap[tarea.Id]) return; // Evitar duplicados
+            if (cardMap[tarea.Id]) return;
 
             const card = crearCard(tarea, tarea.Id);
             const columna = document.querySelector(`.kanban-column[data-estado="${tarea.Estado}"]`);
@@ -196,5 +209,15 @@
                 cardMap[tarea.Id] = card;
             }
         });
+
+        @if (User.IsInRole("admin"))
+        {
+            <text>
+            document.querySelectorAll(".kanban-column").forEach(column => {
+                column.addEventListener("dragover", allowDrop);
+                column.addEventListener("drop", drop);
+            });
+            </text>
+        }
     });
 </script>

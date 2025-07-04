@@ -6,18 +6,25 @@
 
 <div class="p-4 shadow-sm bg-white rounded">
     <h1>@ViewData["Title"]</h1>
-    <a asp-action="TareaAdd" class="btn btn-primary mb-3">Agregar Tarea</a>
+
+    @if (User.IsInRole("admin"))
+    {
+        <a asp-action="TareaAdd" class="btn btn-primary mb-3">Agregar Tarea</a>
+    }
 
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Acciones</th>
+                @if (User.IsInRole("admin"))
+                {
+                    <th>Acciones</th>
+                }
                 <th>Nombre</th>
                 <th>Descripción</th>
                 <th>Fecha Inicio</th>
                 <th>Fecha Entrega</th>
                 <th>Estado</th>
-                <th>Asignado a</th> 
+                <th>Asignado a</th>
                 <th>Días Alerta</th>
             </tr>
         </thead>
@@ -25,10 +32,13 @@
             @foreach (var tarea in Model)
             {
                 <tr>
-                    <td>
-                        <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-secondary btn-sm">Editar</a>
-                        <a asp-action="TareaDeleted" asp-route-id="@tarea.Id" class="btn btn-danger btn-sm">Eliminar</a>
-                    </td>
+                    @if (User.IsInRole("admin"))
+                    {
+                        <td>
+                            <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-secondary btn-sm">Editar</a>
+                            <a asp-action="TareaDeleted" asp-route-id="@tarea.Id" class="btn btn-danger btn-sm">Eliminar</a>
+                        </td>
+                    }
                     <td>@tarea.Nombre</td>
                     <td>@tarea.Descripcion</td>
                     <td>@tarea.FechaInicio.ToShortDateString()</td>

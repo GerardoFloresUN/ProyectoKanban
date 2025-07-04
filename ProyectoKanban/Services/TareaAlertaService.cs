@@ -15,9 +15,7 @@ namespace ProyectoKanban.Services
             _logger = logger;
         }
 
-        // 🔧 Corregido: El método debe ser público para ser accedido correctamente
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-
         {
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -29,14 +27,16 @@ namespace ProyectoKanban.Services
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
                     var hoy = DateTime.Today;
+
                     var tareas = await context.Tareas
-                        .Where(t => !t.AlertaEnviada && t.DiasAntesAlerta > 0)
+                        .Where(t => t.DiasAntesAlerta > 0)
                         .ToListAsync();
 
                     foreach (var tarea in tareas)
                     {
                         var fechaAlerta = tarea.FechaEntrega.AddDays(-tarea.DiasAntesAlerta);
-                        if (hoy >= fechaAlerta)
+
+                        if (!tarea.AlertaEnviada && hoy >= fechaAlerta)
                         {
                             var user = await userManager.FindByIdAsync(tarea.UsuarioId);
                             if (user != null)
@@ -49,10 +49,14 @@ namespace ProyectoKanban.Services
                                 tarea.AlertaEnviada = true;
                             }
                         }
+                        else if (tarea.AlertaEnviada && hoy < fechaAlerta)
+                        {
+                            // 🔄 Si cambia la fecha y la alerta ya fue enviada, permitir reenviarla
+                            tarea.AlertaEnviada = false;
+                        }
                     }
 
                     await context.SaveChangesAsync();
-
                     _logger.LogInformation("🔁 Revisión de tareas completada a las {hora}", DateTime.Now);
                 }
                 catch (Exception ex)
@@ -60,7 +64,6 @@ namespace ProyectoKanban.Services
                     _logger.LogError(ex, "❌ Error durante la revisión de tareas.");
                 }
 
-                // Esperar una hora antes de revisar de nuevo
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }

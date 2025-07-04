@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -51,12 +52,14 @@ namespace ProyectoKanban.Controllers
             return View(lista);
         }
 
+[Authorize(Roles = "admin")]
         public async Task<IActionResult> TareaAdd()
         {
             ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
             return View();
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> TareaAdd(TareaModel model)
         {
@@ -86,6 +89,7 @@ namespace ProyectoKanban.Controllers
             return RedirectToAction("TareaList");
         }
 
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> TareaEdit(Guid id)
         {
             var tarea = await _context.Tareas.FindAsync(id);
@@ -109,6 +113,7 @@ namespace ProyectoKanban.Controllers
             return View(model);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<IActionResult> TareaEdit(TareaModel model)
         {
@@ -137,6 +142,7 @@ namespace ProyectoKanban.Controllers
             return RedirectToAction("TareaList");
         }
 
+        [Authorize(Roles = "admin")]
         public IActionResult TareaDeleted(Guid id)
         {
             var tarea = _context.Tareas.FirstOrDefault(t => t.Id == id);
@@ -156,6 +162,7 @@ namespace ProyectoKanban.Controllers
             return View(model);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public IActionResult TareaDeleted(TareaModel model)
         {
@@ -242,15 +249,19 @@ namespace ProyectoKanban.Controllers
             public int Orden { get; set; }
         }
 
+
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> ConfigurarAlerta(Guid id)
-{
-    var tarea = await _context.Tareas.FindAsync(id);
-    if (tarea == null) return RedirectToAction("Kanban");
+        {
+            var tarea = await _context.Tareas.FindAsync(id);
+            if (tarea == null) return RedirectToAction("Kanban");
 
-    return View(tarea);
-}
+            return View(tarea);
+        }
 
-[HttpPost]
+
+        [Authorize(Roles = "admin")]
+        [HttpPost]
 public async Task<IActionResult> ConfigurarAlerta(Guid id, int DiasAntesAlerta)
 {
     var tarea = await _context.Tareas.FindAsync(id);
