@@ -87,12 +87,21 @@ namespace ProyectoKanban.Controllers
             return RedirectToAction("Login", "Usuario");
         }
 
-        public IActionResult Listado(string confirmed = null, string remove = null)
+        public async Task<IActionResult> Listado(string confirmed = null, string remove = null)
         {
-            var lista = _context.Users.Select(x => new UsuarioViewModel
+            var usuarios = _context.Users.ToList();
+            var lista = new List<UsuarioViewModel>();
+
+            foreach (var user in usuarios)
             {
-                Email = x.Email
-            }).ToList();
+                var esAdmin = await userManager.IsInRoleAsync(user, MyConstants.RolAdmin);
+
+                lista.Add(new UsuarioViewModel
+                {
+                    Email = user.Email,
+                    EsAdmin = esAdmin
+                });
+            }
 
             var model = new UsuariosListadoViewModel
             {
@@ -102,6 +111,7 @@ namespace ProyectoKanban.Controllers
 
             return View(model);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> HacerAdmin(string email)
@@ -114,13 +124,33 @@ namespace ProyectoKanban.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoverAdmin(string email)
-        {
-            var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (usuario == null) return NotFound();
+public async Task<IActionResult> RemoverAdmin(string email)
+{
+    var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    if (usuario == null) return NotFound();
 
-            await userManager.RemoveFromRoleAsync(usuario, MyConstants.RolAdmin);
-            return RedirectToAction("Listado", new { remove = $"Rol removido correctamente a {email}" });
-        }
+    var usuarioActual = User.Identity?.Name;
+    if (usuario.Email == usuarioActual)
+    {
+        TempData["Error"] = "No puedes quitarte el rol de admin a ti mismo.";
+        return RedirectToAction("Listado");
+    }
+
+    await userManager.RemoveFromRoleAsync(usuario, MyConstants.RolAdmin);
+    return RedirectToAction("Listado", new { remove = $"Rol removido correctamente a {email}" });
+}
+
+        
+        [HttpPost]
+[Authorize(Roles = MyConstants.RolAdmin)]
+public async Task<IActionResult> EliminarUsuario(string email)
+{
+    var usuario = await userManager.FindByEmailAsync(email);
+    if (usuario == null) return NotFound();
+
+    await userManager.DeleteAsync(usuario);
+    return RedirectToAction("Listado", new { remove = $"Usuario {email} eliminado correctamente" });
+}
+
     }
 }

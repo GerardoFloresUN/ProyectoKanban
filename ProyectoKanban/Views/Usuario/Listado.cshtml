@@ -5,6 +5,11 @@
 
 <h1>Listado de usuarios</h1>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 @if (!string.IsNullOrEmpty(Model.Mensaje))
 {
     <div class="alert alert-success" role="alert">
@@ -26,20 +31,33 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var usuario in Model.Usuarios)
+    @foreach (var usuario in Model.Usuarios)
+{
+    <tr>
+        @if (User.IsInRole("admin"))
+        {
+            <td>
+                @if (!usuario.EsAdmin)
                 {
-                    <tr>
-                        @if (User.IsInRole("admin"))
-                        {
-                            <td>
-                                <button class="btn btn-primary me-2" asp-action="HacerAdmin" asp-route-email="@usuario.Email">Hacer Admin</button>
-                                <button class="btn btn-secondary me-2" asp-action="RemoverAdmin" asp-route-email="@usuario.Email">Remover Admin</button>
-                            </td>
-                        }
-                        <td>@usuario.Email</td>
-                    </tr>
+                    <button class="btn btn-primary me-2" asp-action="HacerAdmin" asp-route-email="@usuario.Email">Hacer Admin</button>
                 }
-            </tbody>
+
+                @if (usuario.EsAdmin && usuario.Email != User.Identity.Name)
+                {
+                    <button class="btn btn-secondary me-2" asp-action="RemoverAdmin" asp-route-email="@usuario.Email">Remover Admin</button>
+                }
+
+                @if (usuario.Email != User.Identity.Name)
+                {
+                    <button class="btn btn-danger" asp-action="EliminarUsuario" asp-route-email="@usuario.Email">Eliminar</button>
+                }
+            </td>
+        }
+        <td>@usuario.Email @(usuario.EsAdmin ? "(admin)" : "")</td>
+    </tr>
+}
+</tbody>
+
         </table>
     </form>
 }
