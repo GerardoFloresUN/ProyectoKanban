@@ -28,6 +28,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Email y alertas
 builder.Services.AddSingleton<EmailSender>();
 builder.Services.AddHostedService<TareaAlertaService>(); // ✅ Servicio correcto
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 
 var app = builder.Build();
 
