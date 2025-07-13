@@ -30,27 +30,7 @@
     </div>
 }
 
-@if (esAdmin)
-{
-    <div class="container mb-4 d-flex justify-content-center gap-2">
-        <select id="selectTarea" class="form-select w-auto">
-            <option value="">-- Selecciona una tarea --</option>
-            @foreach (var tarea in Model)
-            {
-                <option value="@tarea.Id">@tarea.Nombre</option>
-            }
-        </select>
-        <select id="columnaTarea" class="form-select w-auto">
-            <option value="Por hacer">Por hacer</option>
-            <option value="En progreso">En progreso</option>
-            <option value="Hecho">Hecho</option>
-        </select>
-        <button class="btn btn-primary" onclick="agregarTarea()">
-            ➕ Agregar
-        </button>
-    </div>
-}
-
+ 
 <style>
     .kanban-board {
         display: flex;

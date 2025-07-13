@@ -64,6 +64,8 @@ namespace ProyectoKanban.Controllers
         [HttpPost]
         public async Task<IActionResult> TareaAdd(TareaModel model)
         {
+            model.Estado = "Por hacer"; 
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
@@ -77,7 +79,7 @@ namespace ProyectoKanban.Controllers
                 Descripcion = model.Descripcion,
                 FechaInicio = model.FechaInicio,
                 FechaEntrega = model.FechaEntrega,
-                Estado = model.Estado,
+                Estado = "Por hacer",
                 UsuarioId = model.UsuarioId,
                 Orden = model.Orden,
                 DiasAntesAlerta = model.DiasAntesAlerta,
