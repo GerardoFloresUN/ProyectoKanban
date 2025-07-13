@@ -8,6 +8,7 @@ using ProyectoKanban.Models;
 
 namespace ProyectoKanban.Controllers
 {
+    [Authorize]
     public class TareaController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -52,7 +53,7 @@ namespace ProyectoKanban.Controllers
             return View(lista);
         }
 
-[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> TareaAdd()
         {
             ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
@@ -262,17 +263,17 @@ namespace ProyectoKanban.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpPost]
-public async Task<IActionResult> ConfigurarAlerta(Guid id, int DiasAntesAlerta)
-{
-    var tarea = await _context.Tareas.FindAsync(id);
-    if (tarea == null) return RedirectToAction("Kanban");
+        public async Task<IActionResult> ConfigurarAlerta(Guid id, int DiasAntesAlerta)
+        {
+            var tarea = await _context.Tareas.FindAsync(id);
+            if (tarea == null) return RedirectToAction("Kanban");
 
-    tarea.DiasAntesAlerta = DiasAntesAlerta;
-    tarea.AlertaEnviada = false;
+            tarea.DiasAntesAlerta = DiasAntesAlerta;
+            tarea.AlertaEnviada = false;
 
-    await _context.SaveChangesAsync();
-    return RedirectToAction("Kanban");
-}
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Kanban");
+        }
 
     }
 }

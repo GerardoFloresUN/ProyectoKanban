@@ -22,10 +22,15 @@ namespace ProyectoKanban.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Registro()
-        {
-            return View();
-        }
+public IActionResult Registro()
+{
+    if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        return RedirectToAction("Kanban", "Tarea");
+    }
+
+    return View();
+}
 
         [HttpPost]
         [AllowAnonymous]
@@ -53,14 +58,20 @@ namespace ProyectoKanban.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Login(string mensaje = null)
-        {
-            if (mensaje != null)
-            {
-                ViewData["mensaje"] = mensaje;
-            }
-            return View();
-        }
+public IActionResult Login(string mensaje = null)
+{
+    if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        return RedirectToAction("Kanban", "Tarea");
+    }
+
+    if (mensaje != null)
+    {
+        ViewData["mensaje"] = mensaje;
+    }
+
+    return View();
+}
 
         [HttpPost]
         [AllowAnonymous]
