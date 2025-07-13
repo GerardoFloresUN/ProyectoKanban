@@ -22,15 +22,15 @@ namespace ProyectoKanban.Controllers
         }
 
         [AllowAnonymous]
-public IActionResult Registro()
-{
-    if (User.Identity != null && User.Identity.IsAuthenticated)
-    {
-        return RedirectToAction("Kanban", "Tarea");
-    }
+        public IActionResult Registro()
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Kanban", "Tarea");
+            }
 
-    return View();
-}
+            return View();
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -41,7 +41,12 @@ public IActionResult Registro()
                 return View(model);
             }
 
-            var usuario = new IdentityUser() { Email = model.Email, UserName = model.Email };
+            var usuario = new IdentityUser()
+            {
+                Email = model.Email,
+                UserName = model.Nombre // 👈 Aquí guardamos el "nombre" como UserName
+            };
+
             var resultado = await userManager.CreateAsync(usuario, model.Password);
 
             if (resultado.Succeeded)
@@ -54,24 +59,25 @@ public IActionResult Registro()
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
+
             return View(model);
         }
 
         [AllowAnonymous]
-public IActionResult Login(string mensaje = null)
-{
-    if (User.Identity != null && User.Identity.IsAuthenticated)
-    {
-        return RedirectToAction("Kanban", "Tarea");
-    }
+        public IActionResult Login(string mensaje = null)
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Kanban", "Tarea");
+            }
 
-    if (mensaje != null)
-    {
-        ViewData["mensaje"] = mensaje;
-    }
+            if (mensaje != null)
+            {
+                ViewData["mensaje"] = mensaje;
+            }
 
-    return View();
-}
+            return View();
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -80,6 +86,7 @@ public IActionResult Login(string mensaje = null)
             if (!ModelState.IsValid)
                 return View(model);
 
+            // 👇 Aún usamos el email para login (aunque el "nombre" está en UserName)
             var resultado = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.Recuerdame, lockoutOnFailure: false);
 
             if (resultado.Succeeded)
@@ -110,7 +117,8 @@ public IActionResult Login(string mensaje = null)
                 lista.Add(new UsuarioViewModel
                 {
                     Email = user.Email,
-                    EsAdmin = esAdmin
+                    EsAdmin = esAdmin,
+                    Nombre = user.UserName // 👈 Mostrar el "nombre" (UserName)
                 });
             }
 
@@ -123,7 +131,6 @@ public IActionResult Login(string mensaje = null)
             return View(model);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> HacerAdmin(string email)
         {
@@ -135,29 +142,37 @@ public IActionResult Login(string mensaje = null)
         }
 
         [HttpPost]
-public async Task<IActionResult> RemoverAdmin(string email)
-{
-    var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-    if (usuario == null) return NotFound();
+        public async Task<IActionResult> RemoverAdmin(string email)
+        {
+            var usuario = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return NotFound();
 
-    var usuarioActual = User.Identity?.Name;
-    if (usuario.Email == usuarioActual)
-    {
-        TempData["Error"] = "No puedes quitarte el rol de admin a ti mismo.";
-        return RedirectToAction("Listado");
-    }
+            var usuarioActual = User.Identity?.Name;
+            if (usuario.Email == usuarioActual)
+            {
+                TempData["Error"] = "No puedes quitarte el rol de admin a ti mismo.";
+                return RedirectToAction("Listado");
+            }
 
-    await userManager.RemoveFromRoleAsync(usuario, MyConstants.RolAdmin);
-    return RedirectToAction("Listado", new { remove = $"Rol removido correctamente a {email}" });
-}
+            await userManager.RemoveFromRoleAsync(usuario, MyConstants.RolAdmin);
+            return RedirectToAction("Listado", new { remove = $"Rol removido correctamente a {email}" });
+        }
 
-        
         [HttpPost]
 [Authorize(Roles = MyConstants.RolAdmin)]
 public async Task<IActionResult> EliminarUsuario(string email)
 {
     var usuario = await userManager.FindByEmailAsync(email);
     if (usuario == null) return NotFound();
+
+    // Verificar si tiene tareas asignadas
+    var tieneTareas = _context.Tareas.Any(t => t.UsuarioId == usuario.Id);
+
+    if (tieneTareas)
+    {
+        TempData["Error"] = $"El usuario '{usuario.UserName}' tiene tareas asignadas y no se puede eliminar.";
+        return RedirectToAction("Listado");
+    }
 
     await userManager.DeleteAsync(usuario);
     return RedirectToAction("Listado", new { remove = $"Usuario {email} eliminado correctamente" });

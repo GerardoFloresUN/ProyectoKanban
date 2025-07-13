@@ -27,11 +27,12 @@
                     {
                         <th>Acción</th>
                     }
+                    <th>Nombre</th>
                     <th>Email</th>
                 </tr>
             </thead>
             <tbody>
-    @foreach (var usuario in Model.Usuarios)
+@foreach (var usuario in Model.Usuarios)
 {
     <tr>
         @if (User.IsInRole("admin"))
@@ -53,11 +54,11 @@
                 }
             </td>
         }
+        <td>@usuario.Nombre</td>
         <td>@usuario.Email @(usuario.EsAdmin ? "(admin)" : "")</td>
     </tr>
 }
 </tbody>
-
         </table>
     </form>
 }

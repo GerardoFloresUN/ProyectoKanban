@@ -2,7 +2,6 @@
     Layout = null;
 }
 
-
 @model ProyectoKanban.Models.RegistroViewModel
 @{
     ViewData["Title"] = "Registro";
@@ -26,16 +25,26 @@
         <div class="card">
             <form asp-action="Registro" asp-controller="Usuario" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <!-- NUEVO CAMPO: Nombre -->
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label"></label>
+                    <input asp-for="Nombre" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label"></label>
                     <input asp-for="Email" class="form-control" autocomplete="off" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
                     <label asp-for="Password" class="form-label"></label>
                     <input asp-for="Password" type="password" class="form-control" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
+
                 <button class="btn btn-info w-100">Registrarse</button>
                 <a class="btn btn-outline-primary w-100 mt-2" asp-action="Login" asp-controller="Usuario">¿Ya tienes cuenta?</a>
             </form>

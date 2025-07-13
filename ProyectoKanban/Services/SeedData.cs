@@ -10,8 +10,9 @@ namespace ProyectoKanban.Services
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             string emailAdmin = "admin@kanban.com";
-            string passwordAdmin = "Admin123!"; 
+            string passwordAdmin = "Admin123!";
             string rolAdmin = "admin";
+            string nombreAdmin = "Administrador"; // 👈 Nombre que se guardará en UserName
 
             // 1. Crear el rol si no existe
             if (!await roleManager.RoleExistsAsync(rolAdmin))
@@ -25,7 +26,7 @@ namespace ProyectoKanban.Services
             {
                 var nuevoUsuario = new IdentityUser
                 {
-                    UserName = emailAdmin,
+                    UserName = nombreAdmin, // 👈 Aquí se guarda el nombre en UserName
                     Email = emailAdmin,
                     EmailConfirmed = true
                 };
