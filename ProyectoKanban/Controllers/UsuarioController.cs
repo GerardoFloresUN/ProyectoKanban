@@ -80,23 +80,37 @@ namespace ProyectoKanban.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
+[AllowAnonymous]
+public async Task<IActionResult> Login(LoginViewModel model)
+{
+    if (!ModelState.IsValid)
+        return View(model);
 
-            // 👇 Aún usamos el email para login (aunque el "nombre" está en UserName)
-            var resultado = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.Recuerdame, lockoutOnFailure: false);
+    
+    var usuario = await userManager.FindByEmailAsync(model.Email);
+    if (usuario == null)
+    {
+        ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos");
+        return View(model);
+    }
 
-            if (resultado.Succeeded)
-            {
-                return RedirectToAction("Kanban", "Tarea");
-            }
+    
+    var resultado = await signInManager.PasswordSignInAsync(
+        usuario.UserName, 
+        model.Password,
+        model.Recuerdame,
+        lockoutOnFailure: false
+    );
 
-            ModelState.AddModelError(string.Empty, "Nombre de usuario o password incorrecto");
-            return View(model);
-        }
+    if (resultado.Succeeded)
+    {
+        return RedirectToAction("Kanban", "Tarea");
+    }
+
+    ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos");
+    return View(model);
+}
+
 
         [HttpPost]
         public async Task<IActionResult> Logout()
