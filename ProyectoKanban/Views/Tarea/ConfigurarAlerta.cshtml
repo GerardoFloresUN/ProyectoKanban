@@ -4,19 +4,33 @@
     ViewData["Title"] = "Configurar Alerta";
 }
 
-<h2>Configurar alerta para: @Model.Nombre</h2>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="bg-light p-5 rounded shadow" style="max-width: 600px; width: 100%; opacity: 0.95;">
+        <h2 class="mb-4 text-center">Configurar alerta para: @Model.Nombre</h2>
 
-<form method="post" asp-action="ConfigurarAlerta" asp-controller="Tarea">
-    <input type="hidden" name="id" value="@Model.Id" />
+        <form method="post" asp-action="ConfigurarAlerta" asp-controller="Tarea">
+            <input type="hidden" name="id" value="@Model.Id" />
 
-    <div class="form-group">
-        <label for="DiasAntesAlerta">¿Cuántos días antes del vencimiento quieres recibir una alerta?</label>
-        <input type="number" class="form-control" id="DiasAntesAlerta" name="DiasAntesAlerta" value="@Model.DiasAntesAlerta" min="0" required />
-        <small class="form-text text-muted">Ejemplo: si pones 3, se enviará una alerta 3 días antes de @Model.FechaEntrega.ToShortDateString().</small>
+            <div class="form-group mb-3">
+                <label for="DiasAntesAlerta">¿Cuántos días antes del vencimiento quieres recibir una alerta?</label>
+                <input type="number" class="form-control" id="DiasAntesAlerta" name="DiasAntesAlerta" value="@Model.DiasAntesAlerta" min="0" required />
+                <small class="form-text text-muted">Ejemplo: si pones 3, se enviará una alerta 3 días antes de @Model.FechaEntrega.ToShortDateString().</small>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Guardar alerta</button>
+                <a asp-action="Kanban" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <br />
-
-    <button type="submit" class="btn btn-primary">Guardar alerta</button>
-    <a asp-action="Kanban" class="btn btn-secondary">Cancelar</a>
-</form>
+<style>
+    body {
+        background-image: url('/img/Fondo.jpeg');
+        background-size: cover;
+        background-position: center;
+        font-family: Arial, sans-serif;
+        margin: 0;
+    }
+</style>

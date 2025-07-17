@@ -4,7 +4,7 @@
     var esAdmin = User.IsInRole("admin");
 }
 
-<h1 class="text-center my-4">📋 Tablero Kanban</h1>
+<h1 class="text-center my-4 text-white">📋 Tablero Kanban</h1>
 
 @if (ViewBag.Alertas != null && ((List<ProyectoKanban.Entities.Tarea>)ViewBag.Alertas).Any())
 {
@@ -94,6 +94,10 @@
     <div class="kanban-column" data-estado="Hecho">
         <h2 class="text-success">✅ Hecho</h2>
     </div>
+
+    <style>
+        body { background-image: url('/img/Fondo.jpeg'); font-family: Arial, sans-serif;  color: rgb(0, 0, 0)}       
+    </style>
 </div>
 
 <script>

@@ -1,53 +1,94 @@
 @model List<ProyectoKanban.Models.TareaModel>
 
 @{
-    ViewData["Title"] = "Lista de Tareas";
+    ViewData["Title"] = "📋 Lista de Tareas";
 }
 
-<div class="p-4 shadow-sm bg-white rounded">
-    <h1>@ViewData["Title"]</h1>
-
-    @if (User.IsInRole("admin"))
-    {
-        <a asp-action="TareaAdd" class="btn btn-primary mb-3">Agregar Tarea</a>
-    }
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                @if (User.IsInRole("admin"))
-                {
-                    <th>Acciones</th>
-                }
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Entrega</th>
-                <th>Estado</th>
-                <th>Asignado a</th>
-                <th>Días Alerta</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var tarea in Model)
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
+            @if (User.IsInRole("admin"))
             {
-                <tr>
-                    @if (User.IsInRole("admin"))
-                    {
-                        <td>
-                            <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-secondary btn-sm">Editar</a>
-                            <a asp-action="TareaDeleted" asp-route-id="@tarea.Id" class="btn btn-danger btn-sm">Eliminar</a>
-                        </td>
-                    }
-                    <td>@tarea.Nombre</td>
-                    <td>@tarea.Descripcion</td>
-                    <td>@tarea.FechaInicio.ToShortDateString()</td>
-                    <td>@tarea.FechaEntrega.ToShortDateString()</td>
-                    <td>@tarea.Estado</td>
-                    <td>@(tarea.UsuarioNombre ?? "Sin asignar")</td>
-                    <td>@tarea.DiasAntesAlerta</td>
-                </tr>
+                <a asp-action="TareaAdd" class="btn btn-light text-primary fw-semibold">
+                    ➕ Agregar Tarea
+                </a>
             }
-        </tbody>
-    </table>
+        </div>
+
+        <div class="card-body bg-light rounded-bottom">
+            @if (Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle bg-white">
+                        <thead class="table-secondary text-center">
+                            <tr>
+                                @if (User.IsInRole("admin")) { <th scope="col">Acciones</th> }
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Descripción</th>
+                                <th scope="col">Inicio</th>
+                                <th scope="col">Entrega</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Asignado a</th>
+                                <th scope="col">Días Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tarea in Model)
+                            {
+                                <tr class="text-center">
+                                    @if (User.IsInRole("admin"))
+                                    {
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-outline-secondary">✏️</a>
+                                                <a asp-action="TareaDeleted" asp-route-id="@tarea.Id" class="btn btn-outline-danger">🗑️</a>
+                                            </div>
+                                        </td>
+                                    }
+                                    <td>@tarea.Nombre</td>
+                                    <td>@tarea.Descripcion</td>
+                                    <td>@tarea.FechaInicio.ToShortDateString()</td>
+                                    <td>@tarea.FechaEntrega.ToShortDateString()</td>
+                                    <td>
+                                        <span class="badge bg-@(tarea.Estado == "Completado" ? "success" : tarea.Estado == "Pendiente" ? "warning text-dark" : "secondary")">
+                                            @tarea.Estado
+                                        </span>
+                                    </td>
+                                    <td>@(tarea.UsuarioNombre ?? "Sin asignar")</td>
+                                    <td>@tarea.DiasAntesAlerta</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                @if (ViewBag.TotalPaginas > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-pagina="@i">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    No hay tareas registradas.
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        body { background-image: url('/img/Fondo.jpeg'); font-family: Arial, sans-serif; color: rgba(223, 219, 219, 0.889) }
+         
+    </style>
 </div>
