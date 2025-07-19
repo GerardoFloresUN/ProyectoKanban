@@ -6,6 +6,12 @@
 <div class="container mt-5">
     <h2 class="text-center mb-4 text-primary">👥 Listado de Usuarios </h2>
 
+   
+@if (User.IsInRole("admin"))
+{
+    <a class="btn btn-outline-info mb-3" asp-controller="Dashboard" asp-action="Index">📊 Panel de estadísticas</a>
+}
+
 @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger">@TempData["Error"]</div>

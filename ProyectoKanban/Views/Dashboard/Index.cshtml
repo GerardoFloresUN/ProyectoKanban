@@ -1,0 +1,63 @@
+@model ProyectoKanban.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2 class="mb-4 text-white">📊 Panel de Estadísticas</h2>
+
+<form method="get" class="mb-4 row g-2">
+    <div class="col-md-4">
+        <label for="fechaInicio" class="form-label text-white">Desde:</label>
+        <input type="date" name="fechaInicio" id="fechaInicio" class="form-control" value="@Model.FechaInicio?.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-4">
+        <label for="fechaFin" class="form-label text-white">Hasta:</label>
+        <input type="date" name="fechaFin" id="fechaFin" class="form-control" value="@Model.FechaFin?.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary">Filtrar</button>
+    </div>
+</form>
+
+<canvas id="grafica" height="100"></canvas>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('grafica').getContext('2d');
+        const grafica = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.TareasPorUsuario.Select(u => u.Usuario))),
+                datasets: [
+                    {
+                        label: 'Tareas Completadas (Hecho)',
+                        data: @Html.Raw(Json.Serialize(Model.TareasPorUsuario.Select(u => u.Completadas))),
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)' // verde
+                    },
+                    {
+                        label: 'Tareas Pendientes',
+                        data: @Html.Raw(Json.Serialize(Model.TareasPorUsuario.Select(u => u.Pendientes))),
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)' // amarillo
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <style>
+        body { background-image: url('/img/Fondo.jpeg'); font-family: Arial, sans-serif; color: rgba(9, 9, 9, 0.889) }
+        .card { max-width: 400px; margin: 100px auto; padding: 20px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); border-radius: 10px; }
+    </style>
+}
