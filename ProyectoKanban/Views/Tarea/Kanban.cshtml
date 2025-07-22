@@ -30,7 +30,6 @@
     </div>
 }
 
- 
 <style>
     .kanban-board {
         display: flex;
@@ -74,13 +73,14 @@
         color: #6c757d;
     }
 
-    .kanban-card a {
-        display: block;
-        margin-top: 8px;
-    }
-
     .kanban-card:active {
         cursor: @(esAdmin ? "grabbing" : "default");
+    }
+
+    body {
+        background-image: url('/img/Fondo.jpeg');
+        font-family: Arial, sans-serif;
+        color: rgb(0, 0, 0)
     }
 </style>
 
@@ -91,13 +91,6 @@
     <div class="kanban-column" data-estado="En progreso">
         <h2 class="text-warning">⏳ En progreso</h2>
     </div>
-    <div class="kanban-column" data-estado="Hecho">
-        <h2 class="text-success">✅ Hecho</h2>
-    </div>
-
-    <style>
-        body { background-image: url('/img/Fondo.jpeg'); font-family: Arial, sans-serif;  color: rgb(0, 0, 0)}       
-    </style>
 </div>
 
 <script>
@@ -133,25 +126,6 @@
         }
     }
 
-    function agregarTarea() {
-        const id = document.getElementById('selectTarea').value;
-        const columna = document.getElementById('columnaTarea').value;
-
-        if (!id || cardMap[id]) {
-            alert("Selecciona una tarea válida.");
-            return;
-        }
-
-        const tarea = tareas.find(t => t.Id === id);
-        const card = crearCard(tarea, id);
-        const columnaElement = document.querySelector(`.kanban-column[data-estado="${columna}"]`);
-        columnaElement.appendChild(card);
-        cardMap[id] = card;
-
-        const orden = columnaElement.querySelectorAll('.kanban-card').length - 1;
-        actualizarEstado(id, columna, orden);
-    }
-
     function crearCard(tarea, id) {
         const card = document.createElement('div');
         card.className = 'kanban-card';
@@ -164,8 +138,9 @@
 
         card.innerHTML = `
             <strong>${tarea.Nombre}</strong><br>
-            <small>${tarea.UsuarioNombre || "Sin asignar"}</small>
-            ${esAdmin ? `<a href="/Tarea/ConfigurarAlerta/${tarea.Id}" class="btn btn-sm btn-outline-warning">⏰ Configurar alerta</a>` : ""}
+            <small>${tarea.UsuarioNombre || "Sin asignar"}</small><br>
+            ${esAdmin && tarea.Estado === "En progreso" ? `<button class="btn btn-sm btn-success mt-2" onclick="marcarComoHecho('${tarea.Id}')">✔ Marcar como hecho</button>` : ""}
+            ${esAdmin ? `<a href="/Tarea/ConfigurarAlerta/${tarea.Id}" class="btn btn-sm btn-outline-warning mt-1">⏰ Alerta</a>` : ""}
         `;
 
         return card;
@@ -179,9 +154,20 @@
         }).catch(err => console.error('Error al actualizar:', err));
     }
 
+    function marcarComoHecho(id) {
+        const card = document.getElementById('card-' + id);
+        const columna = card.closest('.kanban-column');
+        const orden = columna.querySelectorAll('.kanban-card').length - 1;
+
+        actualizarEstado(id, "Hecho", orden);
+        card.remove(); // quitar del tablero
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         tareas.forEach(tarea => {
             if (!tarea.Estado) return;
+            if (tarea.Estado === "Hecho") return;
+
             if (cardMap[tarea.Id]) return;
 
             const card = crearCard(tarea, tarea.Id);
