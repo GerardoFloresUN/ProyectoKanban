@@ -27,12 +27,12 @@ namespace ProyectoKanban.Controllers
 
             foreach (var tarea in tareas)
             {
-                string? usuarioEmail = null;
-                if (!string.IsNullOrEmpty(tarea.UsuarioId))
-                {
-                    var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
-                    usuarioEmail = usuario?.Email;
-                }
+                string? usuarioNombre = null;
+if (!string.IsNullOrEmpty(tarea.UsuarioId))
+{
+    var usuario = await _userManager.FindByIdAsync(tarea.UsuarioId);
+    usuarioNombre = usuario?.UserName;
+}
 
                 lista.Add(new TareaModel
                 {
@@ -43,7 +43,7 @@ namespace ProyectoKanban.Controllers
                     FechaEntrega = tarea.FechaEntrega,
                     Estado = tarea.Estado,
                     UsuarioId = tarea.UsuarioId,
-                    UsuarioNombre = usuarioEmail,
+                    UsuarioNombre = usuarioNombre,
                     Orden = tarea.Orden,
                     DiasAntesAlerta = tarea.DiasAntesAlerta,
                     AlertaEnviada = tarea.AlertaEnviada
@@ -56,41 +56,51 @@ namespace ProyectoKanban.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> TareaAdd()
         {
-            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
+            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "UserName");
             return View();
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPost]
-        public async Task<IActionResult> TareaAdd(TareaModel model)
-        {
-            model.Estado = "Por hacer"; 
+[HttpPost]
+public async Task<IActionResult> TareaAdd(TareaModel model)
+{
+    model.Estado = "Por hacer"; // siempre inicia como "Por hacer"
 
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email");
-                return View(model);
-            }
+    if (string.IsNullOrEmpty(model.UsuarioId))
+        ModelState.AddModelError("UsuarioId", "Debes asignar un usuario a la tarea.");
 
-            var tarea = new Tarea
-            {
-                Id = Guid.NewGuid(),
-                Nombre = model.Nombre,
-                Descripcion = model.Descripcion,
-                FechaInicio = model.FechaInicio,
-                FechaEntrega = model.FechaEntrega,
-                Estado = "Por hacer",
-                UsuarioId = model.UsuarioId,
-                Orden = model.Orden,
-                DiasAntesAlerta = model.DiasAntesAlerta,
-                AlertaEnviada = false
-            };
+    if (model.FechaInicio < DateTime.Today)
+        ModelState.AddModelError("FechaInicio", "La fecha de inicio no puede ser en el pasado.");
 
-            _context.Tareas.Add(tarea);
-            await _context.SaveChangesAsync();
+    if (model.FechaEntrega < model.FechaInicio)
+        ModelState.AddModelError("FechaEntrega", "La fecha de entrega no puede ser anterior a la de inicio.");
 
-            return RedirectToAction("TareaList");
-        }
+    if (!ModelState.IsValid)
+    {
+        ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "UserName");
+        return View(model);
+    }
+
+    var tarea = new Tarea
+    {
+        Id = Guid.NewGuid(),
+        Nombre = model.Nombre,
+        Descripcion = model.Descripcion,
+        FechaInicio = model.FechaInicio,
+        FechaEntrega = model.FechaEntrega,
+        Estado = model.Estado,
+        UsuarioId = model.UsuarioId,
+        Orden = model.Orden,
+        DiasAntesAlerta = model.DiasAntesAlerta,
+        AlertaEnviada = false
+    };
+
+    _context.Tareas.Add(tarea);
+    await _context.SaveChangesAsync();
+
+    return RedirectToAction("TareaList");
+}
+
 
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> TareaEdit(Guid id)
@@ -112,38 +122,52 @@ namespace ProyectoKanban.Controllers
                 AlertaEnviada = tarea.AlertaEnviada
             };
 
-            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email", model.UsuarioId);
+            ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "UserName");
             return View(model);
         }
 
         [Authorize(Roles = "admin")]
-        [HttpPost]
-        public async Task<IActionResult> TareaEdit(TareaModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "Email", model.UsuarioId);
-                return View(model);
-            }
+[HttpPost]
+public async Task<IActionResult> TareaEdit(TareaModel model)
+{
+    if (string.IsNullOrEmpty(model.UsuarioId))
+        ModelState.AddModelError("UsuarioId", "Debes asignar un usuario a la tarea.");
 
-            var tarea = await _context.Tareas.FindAsync(model.Id);
-            if (tarea == null) return RedirectToAction("TareaList");
+    if (model.FechaInicio < DateTime.Today)
+        ModelState.AddModelError("FechaInicio", "La fecha de inicio no puede ser en el pasado.");
 
-            tarea.Nombre = model.Nombre;
-            tarea.Descripcion = model.Descripcion;
-            tarea.FechaInicio = model.FechaInicio;
-            tarea.FechaEntrega = model.FechaEntrega;
-            tarea.Estado = model.Estado;
-            tarea.UsuarioId = model.UsuarioId;
-            tarea.Orden = model.Orden;
-            tarea.DiasAntesAlerta = model.DiasAntesAlerta;
-            tarea.AlertaEnviada = false; // Se reinicia al editar
+    if (model.FechaEntrega < model.FechaInicio)
+        ModelState.AddModelError("FechaEntrega", "La fecha de entrega no puede ser anterior a la de inicio.");
 
-            _context.Update(tarea);
-            await _context.SaveChangesAsync();
+    var tarea = await _context.Tareas.FindAsync(model.Id);
+    if (tarea == null) return RedirectToAction("TareaList");
 
-            return RedirectToAction("TareaList");
-        }
+    // Validar que no se regrese a "Por hacer" si estaba en "En progreso"
+    if (tarea.Estado == "En progreso" && model.Estado == "Por hacer")
+        ModelState.AddModelError("Estado", "No puedes regresar una tarea 'En progreso' a 'Por hacer'.");
+
+    if (!ModelState.IsValid)
+    {
+        ViewBag.Usuarios = new SelectList(await _userManager.Users.ToListAsync(), "Id", "UserName", model.UsuarioId);
+        return View(model);
+    }
+
+    tarea.Nombre = model.Nombre;
+    tarea.Descripcion = model.Descripcion;
+    tarea.FechaInicio = model.FechaInicio;
+    tarea.FechaEntrega = model.FechaEntrega;
+    tarea.Estado = model.Estado;
+    tarea.UsuarioId = model.UsuarioId;
+    tarea.Orden = model.Orden;
+    tarea.DiasAntesAlerta = model.DiasAntesAlerta;
+    tarea.AlertaEnviada = false;
+
+    _context.Update(tarea);
+    await _context.SaveChangesAsync();
+
+    return RedirectToAction("TareaList");
+}
+
 
         [Authorize(Roles = "admin")]
         public IActionResult TareaDeleted(Guid id)
