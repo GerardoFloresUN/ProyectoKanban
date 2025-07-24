@@ -4,62 +4,90 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-success text-white d-flex justify-content-between">
+    <div class="card shadow-lg">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0">@ViewData["Title"]</h3>
         </div>
 
-        <div class="card-body bg-light">
-            <form method="get" class="row g-3 mb-4">
+        <div class="card-body bg-light rounded-bottom">
+            <form method="get" class="mb-4 row g-2">
                 <div class="col-md-4">
-                    <label class="form-label">Desde:</label>
-                    <input type="date" name="fechaInicio" class="form-control" value="@ViewBag.FechaInicio" />
+                    <label for="fechaInicio" class="form-label text-dark">Desde:</label>
+                    <input type="date" name="fechaInicio" id="fechaInicio" class="form-control"
+                           value="@ViewBag.FechaInicio" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Hasta:</label>
-                    <input type="date" name="fechaFin" class="form-control" value="@ViewBag.FechaFin" />
+                    <label for="fechaFin" class="form-label text-dark">Hasta:</label>
+                    <input type="date" name="fechaFin" id="fechaFin" class="form-control"
+                           value="@ViewBag.FechaFin" />
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <button class="btn btn-primary w-100">Filtrar</button>
                 </div>
             </form>
 
-            @if (Model.Any())
+            @if ((ViewBag.FechaInicio != null || ViewBag.FechaFin != null) && Model.Count > 0)
             {
-                <table class="table table-bordered text-center bg-white">
-                    <thead class="table-success">
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Inicio</th>
-                            <th>Entrega</th>
-                            <th>Asignado a</th>
-                            <th>Días Alerta</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tarea in Model)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle bg-white">
+                        <thead class="table-success text-center">
                             <tr>
-                                <td>@tarea.Nombre</td>
-                                <td>@tarea.Descripcion</td>
-                                <td>@tarea.FechaInicio.ToShortDateString()</td>
-                                <td>@tarea.FechaEntrega.ToShortDateString()</td>
-                                <td>@(tarea.UsuarioNombre ?? "Sin asignar")</td>
-                                <td>@tarea.DiasAntesAlerta</td>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Inicio</th>
+                                <th>Entrega</th>
+                                <th>Estado</th>
+                                <th>Asignado a</th>
+                                <th>Días Alerta</th>
+                                @if (User.IsInRole("admin"))
+                                {
+                                    <th>Acciones</th>
+                                }
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var tarea in Model)
+                            {
+                                <tr class="text-center">
+                                    <td>@tarea.Nombre</td>
+                                    <td>@tarea.Descripcion</td>
+                                    <td>@tarea.FechaInicio.ToShortDateString()</td>
+                                    <td>@tarea.FechaEntrega.ToShortDateString()</td>
+                                    <td><span class="badge bg-success">Hecho</span></td>
+                                    <td>@(tarea.UsuarioNombre ?? "Sin asignar")</td>
+                                    <td>@tarea.DiasAntesAlerta</td>
+                                    @if (User.IsInRole("admin"))
+                                    {
+                                        <td>
+                                            <a asp-action="TareaEdit" asp-route-id="@tarea.Id" class="btn btn-outline-secondary btn-sm">✏️ Editar</a>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else if (ViewBag.FechaInicio != null || ViewBag.FechaFin != null)
+            {
+                <div class="alert alert-info text-center">
+                    No se encontraron tareas completadas en el rango de fechas seleccionado.
+                </div>
             }
             else
             {
-                <div class="alert alert-info text-center">No hay tareas completadas en ese rango.</div>
+                <div class="alert alert-warning text-center">
+                    Usa el filtro para ver las tareas completadas por rango de fechas.
+                </div>
             }
         </div>
     </div>
 
     <style>
-        body { background-image: url('/img/Fondo.jpeg'); font-family: Arial, sans-serif; color: rgba(1, 1, 1, 0.889) }        
+        body {
+            background-image: url('/img/Fondo.jpeg');
+            font-family: Arial, sans-serif;
+            color: rgb(0, 0, 0);
+        }
     </style>
 </div>

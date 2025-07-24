@@ -80,7 +80,7 @@ namespace ProyectoKanban.Services
                     _logger.LogError(ex, "❌ Error durante la revisión de tareas.");
                 }
 
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
             }
         }
     }
